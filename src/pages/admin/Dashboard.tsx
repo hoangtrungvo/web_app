@@ -14,7 +14,6 @@ const Dashboard = () => {
   };
 
   // Recent users
-  const recentUsers = users.slice(0, 8);
 
   return (
     <div className="page-container">

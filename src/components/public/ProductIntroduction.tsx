@@ -1,5 +1,5 @@
 // src/components/public/ProductIntroduction.tsx
-import { Newspaper, Brain, TrendingUp, Shield, Zap } from 'lucide-react';
+import {  Brain, TrendingUp, Shield, Zap } from 'lucide-react';
 
 const ProductIntroduction = () => {
   const features = [

@@ -57,12 +57,12 @@ const TransactionManagement = () => {
     }).format(amount);
   };
 
-  const getTypeIcon = (type: string) => {
-    if (type === 'deposit' || type === 'income') {
-      return <ArrowDownLeft size={16} />;
-    }
-    return <ArrowUpRight size={16} />;
-  };
+  // const getTypeIcon = (type: string) => {
+  //   if (type === 'deposit' || type === 'income') {
+  //     return <ArrowDownLeft size={16} />;
+  //   }
+  //   return <ArrowUpRight size={16} />;
+  // };
 
   const getStatusColor = (status: string) => {
     switch (status) {
