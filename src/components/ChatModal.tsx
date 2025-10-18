@@ -9,7 +9,7 @@ interface ChatModalProps {
 }
 
 const ChatModal: React.FC<ChatModalProps> = ({ conversationId, onClose }) => {
-  const { fetchConversationDetail, fetchMessages, sendMessage, markMessageAsRead, activateConversation, closeConversation } = useConversations();
+  const { fetchConversationDetail, fetchMessages, sendMessage, markConversationMessagesAsRead } = useConversations();
   const [conversation, setConversation] = useState<ConversationDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -87,31 +87,22 @@ const ChatModal: React.FC<ChatModalProps> = ({ conversationId, onClose }) => {
       const detail = await fetchConversationDetail(conversationId);
       setConversation(detail);
 
-      // Mark unread user messages as read when staff opens the chat
-      if (detail && detail.messages) {
-        const unreadUserMessages = detail.messages.filter(
-          message => !message.isRead && message.senderType === 'User'
-        );
-
-        // Mark each unread message as read
-        for (const message of unreadUserMessages) {
-          try {
-            const success = await markMessageAsRead(message.id);
-            if (success) {
-              // Update local state to reflect read status
-              setConversation((prev) => {
-                if (!prev) return prev;
-                return {
-                  ...prev,
-                  messages: prev.messages.map((msg) =>
-                    msg.id === message.id ? { ...msg, isRead: true } : msg
-                  ),
-                };
-              });
-            }
-          } catch (err) {
-            console.error(`Failed to mark message ${message.id} as read:`, err);
+      // Mark all messages in the conversation as read when staff opens the chat
+      if (detail && detail.messages && detail.messages.length > 0) {
+        try {
+          const success = await markConversationMessagesAsRead(conversationId);
+          if (success) {
+            // Update local state to reflect all messages as read
+            setConversation((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                messages: prev.messages.map((msg) => ({ ...msg, isRead: true })),
+              };
+            });
           }
+        } catch (err) {
+          console.error('Failed to mark conversation messages as read:', err);
         }
       }
     } finally {
@@ -166,57 +157,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ conversationId, onClose }) => {
     }
   };
 
-  const handleActivateConversation = async () => {
-    if (!conversation) return;
-    try {
-      const success = await activateConversation(conversation.id);
-      if (success) {
-        // Update local state
-        setConversation(prev => prev ? { ...prev, status: 'active' } : null);
-      }
-    } catch (err) {
-      console.error('Failed to activate conversation:', err);
-    }
-  };
-
-  const handleCloseConversation = async () => {
-    if (!conversation) return;
-    try {
-      const success = await closeConversation(conversation.id);
-      if (success) {
-        // Update local state
-        setConversation(prev => prev ? { ...prev, status: 'closed' } : null);
-      }
-    } catch (err) {
-      console.error('Failed to close conversation:', err);
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    if (!conversation || !conversation.messages) return;
-    
-    const unreadMessages = conversation.messages.filter(msg => !msg.isRead);
-    
-    for (const message of unreadMessages) {
-      try {
-        const success = await markMessageAsRead(message.id);
-        if (success) {
-          setConversation(prev => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              messages: prev.messages.map(msg =>
-                msg.id === message.id ? { ...msg, isRead: true } : msg
-              ),
-            };
-          });
-        }
-      } catch (err) {
-        console.error(`Failed to mark message ${message.id} as read:`, err);
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="chat-overlay" onClick={onClose}>
@@ -254,29 +194,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ conversationId, onClose }) => {
               {conversation.status}
             </span>
           </div>
-          <div className="header-actions">
-            <button 
-              className="action-btn activate-btn" 
-              onClick={handleActivateConversation}
-              disabled={conversation.status === 'active'}
-            >
-              Activate
-            </button>
-            <button 
-              className="action-btn close-conversation-btn" 
-              onClick={handleCloseConversation}
-              disabled={conversation.status === 'closed'}
-            >
-              Close
-            </button>
-            <button 
-              className="action-btn read-btn" 
-              onClick={handleMarkAllAsRead}
-            >
-              Mark All Read
-            </button>
-            <button className="close-btn" onClick={onClose}>&times;</button>
-          </div>
+          <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
 
         {/* Messages */}
@@ -303,6 +221,11 @@ const ChatModal: React.FC<ChatModalProps> = ({ conversationId, onClose }) => {
                         <div className="message-time">
                           {formatTime(message.createdAt)}
                         </div>
+                        {message.isRead && (
+                          <div className="message-read-status">
+                            ✓ Read
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 // Custom hook for Authentication
-import { useState, useEffect } from 'react';
-import { authApi } from '../config/api';
-import { API_CONFIG } from '../config/api.config';
+import { useState, useEffect } from "react";
+import { authApi } from "../config/api";
+import { API_CONFIG } from "../config/api.config";
 
 interface LoginCredentials {
   username: string;
@@ -24,11 +24,12 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  loginError: string;
 }
 
-const TOKEN_KEY = 'admin_token';
-const USER_KEY = 'admin_user';
-const REFRESH_TOKEN_KEY = 'admin_refresh_token';
+const TOKEN_KEY = "admin_token";
+const USER_KEY = "admin_user";
+const REFRESH_TOKEN_KEY = "admin_refresh_token";
 
 // JWT Token Payload interface
 interface JWTPayload {
@@ -44,19 +45,19 @@ interface JWTPayload {
 const decodeToken = (token: string): JWTPayload | null => {
   try {
     // JWT format: header.payload.signature
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) {
-      throw new Error('Invalid JWT token format');
+      throw new Error("Invalid JWT token format");
     }
 
     // Decode payload (middle part)
     const payload = parts[1];
 
     // Convert base64url to base64
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
 
     // Add padding if needed
-    const paddedBase64 = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+    const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
 
     // Decode base64 to string
     const decodedPayload = atob(paddedBase64);
@@ -66,7 +67,7 @@ const decodeToken = (token: string): JWTPayload | null => {
 
     return jwtPayload;
   } catch (error) {
-    console.error('Error decoding JWT token:', error);
+    console.error("Error decoding JWT token:", error);
     return null;
   }
 };
@@ -90,20 +91,20 @@ const getUserFromToken = (token: string): AuthUser | null => {
 
   // Get Role from payload (handle different role claim formats)
   let role = payload.role;
-  if (!role && payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']) {
-    role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+  if (!role && payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]) {
+    role = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
   }
 
-  console.log('Decoded JWT Payload:', payload);
+  console.log("Decoded JWT Payload:", payload);
 
   // Extract user info from payload (adjust based on your JWT structure)
   return {
-    id: payload.sub || '',
-    username: payload.username || payload.email || '',
-    email: payload.email || '',
-    fullName: payload.fullName || payload.name || '',
+    id: payload.sub || "",
+    username: payload.username || payload.email || "",
+    email: payload.email || "",
+    fullName: payload.fullName || payload.name || "",
     gender: payload.gender,
-    role: role || 'ROLE_USER',
+    role: role || "ROLE_USER",
     isActive: payload.isActive !== false,
     status: payload.status !== false,
   };
@@ -115,6 +116,8 @@ export const useAuth = () => {
     isAuthenticated: false,
     isLoading: true,
     error: null,
+
+    loginError: "",
   });
 
   // Initialize auth state from localStorage
@@ -142,15 +145,16 @@ export const useAuth = () => {
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            loginError: "",
           });
         } else {
-          setAuthState(prev => ({
+          setAuthState((prev) => ({
             ...prev,
             isLoading: false,
           }));
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error("Error initializing auth:", error);
         logout();
       }
     };
@@ -158,50 +162,62 @@ export const useAuth = () => {
     initializeAuth();
   }, []);
 
-   const login = async (credentials: LoginCredentials) => {
-      try {
-        setAuthState(prev => ({ ...prev, isLoading: true }));
+  const login = async (credentials: LoginCredentials) => {
+    try {
+      setAuthState((prev) => ({ ...prev, isLoading: true }));
 
-        // Test account - no API call needed
-        if (credentials.username === 'admin_test' && credentials.password === 'admin123') {
-          // Create a mock test token and user
-          const mockToken = 'mock_test_token_' + Math.random().toString(36);
-          const mockUser: AuthUser = {
-            id: 'test-user-id-12345',
-            username: 'admin_test',
-            email: 'admin_test@petstore.local',
-            fullName: 'Test Admin',
-            gender: 'MALE',
-            role: 'ROLE_ADMIN',
-            isActive: true,
-            status: true,
-          };
+      // Test account - no API call needed
+      if (credentials.username === "admin_test" && credentials.password === "admin123") {
+        // Create a mock test token and user
+        const mockToken = "mock_test_token_" + Math.random().toString(36);
+        const mockUser: AuthUser = {
+          id: "test-user-id-12345",
+          username: "admin_test",
+          email: "admin_test@petstore.local",
+          fullName: "Test Admin",
+          gender: "MALE",
+          role: "ROLE_ADMIN",
+          isActive: true,
+          status: true,
+        };
 
-          // Save to localStorage
-          localStorage.setItem(TOKEN_KEY, mockToken);
-          localStorage.setItem(REFRESH_TOKEN_KEY, 'mock_refresh_token');
-          localStorage.setItem(USER_KEY, JSON.stringify(mockUser));
+        // Save to localStorage
+        localStorage.setItem(TOKEN_KEY, mockToken);
+        localStorage.setItem(REFRESH_TOKEN_KEY, "mock_refresh_token");
+        localStorage.setItem(USER_KEY, JSON.stringify(mockUser));
 
-          setAuthState({
-            token: mockToken,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-          console.log('✅ Test account login successful');
-          return true;
-        }
+        setAuthState({
+          token: mockToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          loginError: "",
+        });
+        console.log("✅ Test account login successful");
+        return true;
+      }
 
-        // Regular login via API
-        const response = await authApi.login(credentials.username, credentials.password);
-        const { accessToken, refreshToken } = response;
+      // Regular login via API
+      const response = await authApi.login(credentials.username, credentials.password);
+      const { accessToken, refreshToken } = response;
 
-        // Get user info from token payload
-        const user = getUserFromToken(accessToken);
-        if (!user) {
-          throw new Error('Invalid token payload');
-        }
+      // Get user info from token payload
+      const user = getUserFromToken(accessToken);
+      if (!user) {
+        throw new Error("Invalid token payload");
+      }
 
+      // Check if user has permission to access dashboard
+      if (user.role === "ROLE_USER") {
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: "Bạn không có quyền truy cập dashboard",
+          loginError: "Bạn không có quyền truy cập dashboard",
+        }));
+        console.log("❌ ROLE_USER cannot access dashboard");
+        return false;
+      } else {
         // Save to localStorage
         localStorage.setItem(TOKEN_KEY, accessToken);
         localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
@@ -212,36 +228,40 @@ export const useAuth = () => {
           isAuthenticated: true,
           isLoading: false,
           error: null,
+          loginError: "",
         });
-        console.log('✅ Login successful');
+        console.log("✅ Login successful");
         return true;
-      } catch (error) {
-        console.error('Login failed:', error);
-        setAuthState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: 'Invalid username or password',
-        }));
-        return false;
       }
-    };  const logout = () => {
+    } catch (error) {
+      console.error("Login failed:", error);
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: "Invalid username or password",
+      }));
+      return false;
+    }
+  };
+  const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    localStorage.removeItem('admin_token_expiration');
+    localStorage.removeItem("admin_token_expiration");
     setAuthState({
       token: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      loginError: "",
     });
   };
 
   const clearError = () => {
-      setAuthState(prev => ({
-         ...prev,
-         error: null
-      }));
+    setAuthState((prev) => ({
+      ...prev,
+      error: null,
+    }));
   };
 
   // Get current user from token
@@ -261,19 +281,19 @@ export const useAuth = () => {
     try {
       const refreshTokenValue = localStorage.getItem(REFRESH_TOKEN_KEY);
       if (!refreshTokenValue) {
-        console.error('No refresh token available');
+        console.error("No refresh token available");
         logout();
         return false;
       }
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/refresh-token`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({
-          refreshToken: refreshTokenValue
+          refreshToken: refreshTokenValue,
         }),
       });
 
@@ -287,7 +307,7 @@ export const useAuth = () => {
       // Get user info from new token payload
       const user = getUserFromToken(accessToken);
       if (!user) {
-        throw new Error('Invalid token payload in refresh response');
+        throw new Error("Invalid token payload in refresh response");
       }
 
       // Update localStorage with new tokens
@@ -301,24 +321,25 @@ export const useAuth = () => {
         isAuthenticated: true,
         isLoading: false,
         error: null,
+        loginError: "",
       });
 
-      console.log('✅ Token refreshed successfully');
+      console.log("✅ Token refreshed successfully");
       return true;
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
       logout(); // Clear all tokens on refresh failure
       return false;
     }
   };
 
   return {
-      ...authState,
-      login,
-      logout,
-      clearError,
-      getCurrentUser,
-      getTokenPayload,
-      refreshToken
-  }
-}
+    ...authState,
+    login,
+    logout,
+    clearError,
+    getCurrentUser,
+    getTokenPayload,
+    refreshToken,
+  };
+};

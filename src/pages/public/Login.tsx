@@ -1,37 +1,37 @@
 // src/pages/public/Login.tsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogIn, AlertCircle } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogIn, AlertCircle } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, isLoading: authLoading, error: authError, clearError } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading, error: authError, loginError, clearError } = useAuth();
 
-  const [form, setForm] = useState({ username: '', password: '' });
-  const [localError, setLocalError] = useState('');
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [localError, setLocalError] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/admin');
+      navigate("/admin");
     }
   }, [isAuthenticated, navigate]);
 
   // Clear errors when form changes
   useEffect(() => {
-    if (localError) setLocalError('');
+    if (localError) setLocalError("");
     if (authError) clearError();
-  }, [form.username, form.password, localError, authError, clearError]);
+  }, [form.username, form.password, clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalError('');
+    setLocalError("");
 
     // Validation
     if (!form.username || !form.password) {
-      setLocalError('Vui lòng nhập đầy đủ thông tin');
+      setLocalError("Vui lòng nhập đầy đủ thông tin");
       return;
     }
 
@@ -44,11 +44,14 @@ const Login = () => {
       });
 
       if (success) {
-        navigate('/admin');
+        navigate("/admin");
+      } else {
+        alert(loginError);
       }
-      // Error handling is done by the useAuth hook
+      // Error will be handled by authError state from useAuth hook
     } catch (error) {
-      setLocalError('Đã xảy ra lỗi không mong muốn');
+      alert(loginError);
+      setLocalError("Đã xảy ra lỗi không mong muốn");
     } finally {
       setLoading(false);
     }
@@ -99,11 +102,7 @@ const Login = () => {
             />
           </div>
 
-          <button
-            type="submit"
-            className="btn-primary btn-block"
-            disabled={loading || authLoading}
-          >
+          <button type="submit" className="btn-primary btn-block" disabled={loading || authLoading}>
             {loading || authLoading ? (
               <>
                 <div className="spinner-small" />
@@ -120,11 +119,17 @@ const Login = () => {
 
         <div className="login-footer">
           <p className="demo-info">
-            <strong>🧪 Tài khoản test:</strong><br />
-            Tên đăng nhập: <code>admin_test</code><br />
-            Mật khẩu: <code>admin123</code>
+            <strong>🧪 Tài khoản test:</strong>
+            <br />
+            <strong>Admin:</strong> admin_test / admin123
+            <br />
+            <strong>Staff:</strong> staff_test / staff123
+            <br />
+            <strong>User:</strong> user_test / user123 (không có quyền)
           </p>
-          <a href="/" className="back-home">← Về trang chủ</a>
+          <a href="/" className="back-home">
+            ← Về trang chủ
+          </a>
         </div>
       </div>
 

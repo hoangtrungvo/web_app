@@ -317,10 +317,10 @@ export const authApi = {
 
     const result = await handleResponse<{ accessToken: string; refreshToken: string; expiration: string }>(response);
 
-    // Lưu token vào localStorage
-    localStorage.setItem('admin_token', result.accessToken);
-    localStorage.setItem('admin_refresh_token', result.refreshToken);
-    localStorage.setItem('admin_token_expiration', result.expiration);
+    // // Lưu token vào localStorage
+    // localStorage.setItem('admin_token', result.accessToken);
+    // localStorage.setItem('admin_refresh_token', result.refreshToken);
+    // localStorage.setItem('admin_token_expiration', result.expiration);
     
     return result;
   },

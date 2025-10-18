@@ -198,11 +198,34 @@ export const useConversations = () => {
     }
   };
 
+  const markConversationMessagesAsRead = async (conversationId: string): Promise<boolean> => {
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/Chat/conversations/${conversationId}/messages/read`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Error marking conversation messages as read:', err);
+      return false;
+    }
+  };
+
   const activateConversation = async (conversationId: string): Promise<boolean> => {
     try {
       const token = localStorage.getItem('admin_token');
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/Chat/conversations/${conversationId}/activate`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -225,7 +248,7 @@ export const useConversations = () => {
     try {
       const token = localStorage.getItem('admin_token');
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/Chat/conversations/${conversationId}/close`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -261,6 +284,7 @@ export const useConversations = () => {
     getConversationsByStatus,
     getStatistics,
     markMessageAsRead,
+    markConversationMessagesAsRead,
     activateConversation,
     closeConversation,
   };

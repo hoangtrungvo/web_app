@@ -21,8 +21,6 @@ export interface User {
   username: string;
   email: string;
   fullName: string;
-  gender: 'MALE' | 'FEMALE' | string;
-  imgUrl: string;
   isActive: boolean;
   status: boolean;
   registerStatus: string;
