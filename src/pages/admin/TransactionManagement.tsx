@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import { useTransactions, type Transaction } from '../../hooks/useTransactions';
 import { 
   Search, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
   Zap
 } from 'lucide-react';
 import '../styles/TransactionManagement.css';
