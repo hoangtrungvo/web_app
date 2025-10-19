@@ -1,5 +1,5 @@
 // src/pages/admin/UserManagement.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useUsers } from '../../hooks';
 import { Search, UserCog, Plus, UserMinus } from 'lucide-react';
 
@@ -47,7 +47,7 @@ const UserManagement = () => {
     }
   };    
 
-    const handleUnAssignStaff = async (userId: string) => {
+    const handleUnassignStaff = async (userId: string) => {
     try {
       await unassignStaff(userId);
       // Reload the page after successful assignment
@@ -126,7 +126,7 @@ const UserManagement = () => {
                   )}
                   {user.role === 'ROLE_STAFF' && (
                     <button
-                      onClick={() => unassignStaff?.(user.id)}
+                      onClick={() => handleUnassignStaff(user.id)}
                       className="btn-action danger"
                       title="Gỡ bỏ vai trò nhân viên"
                     >
