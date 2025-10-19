@@ -1,6 +1,6 @@
 // src/components/public/AppDownload.tsx
 import { Smartphone } from 'lucide-react';
-import "../../assets";
+
 const AppDownload = () => {
   return (
     <section className="download-section" id="download">
