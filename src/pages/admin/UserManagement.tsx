@@ -1,5 +1,5 @@
 // src/pages/admin/UserManagement.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUsers } from '../../hooks';
 import { Search, UserCog, Plus, UserMinus } from 'lucide-react';
 
@@ -9,6 +9,8 @@ const UserManagement = () => {
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [creditAmount, setCreditAmount] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const handleAddCredit = async () => {
     if (!selectedUserId || !creditAmount) return;
@@ -24,6 +26,7 @@ const UserManagement = () => {
       setShowCreditModal(false);
       setCreditAmount('');
       setSelectedUserId(null);
+      window.location.reload();
       alert('Thêm credit thành công!');
     } catch (err) {
       console.error('Failed to add credit:', err);
@@ -64,6 +67,17 @@ const UserManagement = () => {
     u.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   if (loading) return <div className="loading-state">Đang tải người dùng...</div>;
 
   return (
@@ -71,7 +85,9 @@ const UserManagement = () => {
       <div className="page-header">
         <div>
           <h2>Quản lý Người dùng</h2>
-          <p className="subtitle">{filteredUsers.length} người dùng</p>
+          <p className="subtitle">
+            Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} của {filteredUsers.length} người dùng
+          </p>
         </div>
       </div>
 
@@ -98,7 +114,7 @@ const UserManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map(user => (
+            {currentUsers.map(user => (
               <tr key={user.id}>
                 <td className="font-mono">#{user.id}</td>
                 <td className="font-bold">{user.fullName}</td>
@@ -154,6 +170,39 @@ const UserManagement = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="pagination-btn"
+          >
+            ‹ Trước
+          </button>
+
+          <div className="pagination-numbers">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="pagination-btn"
+          >
+            Sau ›
+          </button>
+        </div>
+      )}
 
       {/* Credit Modal */}
       {showCreditModal && (
